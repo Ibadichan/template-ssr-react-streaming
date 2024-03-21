@@ -1,4 +1,5 @@
 import { useState, lazy, Suspense } from 'react'
+import { Helmet } from 'react-helmet-async'
 import reactLogo from './assets/react.svg'
 import './App.css'
 
@@ -10,6 +11,10 @@ function App() {
 
   return (
     <>
+      <Helmet>
+        <title>My react app</title>
+        <meta name="description" content="meta desc" />
+      </Helmet>
       <div>
         <a href="https://vitejs.dev" target="_blank">
           <img src="/vite.svg" className="logo" alt="Vite logo" />
