@@ -1,0 +1,15 @@
+.cards {
+    border: 2px solid black;
+}
+
+.cardsItem {
+    margin-bottom: 20px;
+}
+
+.cardsTitle {
+    font-weight: 500;
+}
+
+.cardsDesc {
+    font-size: 14px;
+}

@@ -1,0 +1,15 @@
+.list {
+    border: 2px solid black;
+}
+
+.listItem {
+    margin-bottom: 20px;
+}
+
+.listItemTitle {
+    font-weight: 500;
+}
+
+.listItemDesc {
+    font-size: 14px;
+}
