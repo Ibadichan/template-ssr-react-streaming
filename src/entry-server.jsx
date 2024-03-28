@@ -1,11 +1,28 @@
 import React from 'react'
 import { renderToPipeableStream } from 'react-dom/server'
 import { HelmetProvider } from 'react-helmet-async'
+import MultiStream from 'multistream'
+import { Readable } from 'node:stream'
 import App from './App'
+
+// small utility for "readable" streams
+const readableString = string => {
+  const s = new Readable();
+  s.push(string);
+  s.push(null);
+  s._read = () => true;
+  return s;
+};
 
 const ABORT_DELAY = 10000;
 
-export function render(res, template) {
+export function render(params) {
+  const {
+    res, 
+    template,
+    styledStream,
+  }= params;
+
   const helmetContext = {};
 
   let didError = false;
@@ -29,18 +46,25 @@ export function render(res, template) {
         const title = helmet.title.toString();
         const meta =  helmet.meta.toString();
 
-        const [first, second] = template.split(`<!--app-html-->`);
+        let [htmlStart, htmlEnd] = template.split(`<!--app-html-->`);
 
-        const head = first.replace(`<!--app-head-->`, [
+        htmlStart = htmlStart.replace(`<!--app-head-->`, [
           title,
           meta,
         ].join(''));
 
-        res.write(head);
-        pipe(res);
-        res.write(second);
+        res.write(htmlStart);
+  
+        const endStream = readableString(htmlEnd);
 
-        res.end();
+        const streams = [
+          styledStream,
+          endStream,
+        ];
+
+        new MultiStream(streams).pipe(res);
+
+        pipe(styledStream);
       },
       onError(error) {
         didError = true;

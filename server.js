@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises'
 import express from 'express'
+import { discoverProjectStyles, createCriticalStyleStream, loadStyleDefinitions } from 'used-styles'
 
 // Constants
 const isProduction = process.env.NODE_ENV === 'production'
@@ -34,8 +35,15 @@ if (!isProduction) {
   app.use(base, sirv('./dist/client', { extensions: [] }))
 }
 
+// generate lookup table on server start
+const stylesLookup = isProduction
+  ? discoverProjectStyles('./dist/client') 
+  : loadStyleDefinitions(async () => []);
+
 // Serve HTML
 app.use('*', async (req, res) => {
+  await stylesLookup;
+
   try {
     const url = req.originalUrl.replace(base, '')
 
@@ -51,7 +59,14 @@ app.use('*', async (req, res) => {
       render = (await import('./dist/server/entry-server.js')).render
     }
 
-    await render(res, template);
+    // create critical CSS stream - it will inline all styles
+    const styledStream = createCriticalStyleStream(stylesLookup);
+
+    await render({
+      res, 
+      template,
+      styledStream
+    });
   } catch (e) {
     vite?.ssrFixStacktrace(e)
     console.log(e.stack)
